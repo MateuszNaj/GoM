@@ -1,50 +1,59 @@
 
+const trainingTemplates = {
+  "Trening A": [
+    { name: "Wyciskanie sztangielek na ławce płaskiej", part: "klatka piersiowa", video: "https://www.youtube.com/watch?v=OQKgofRGzN8", sets: 3, reps: 10, kg: 20 },
+    { name: "Wiosłowanie sztangielek", part: "plecy", video: "https://www.youtube.com/watch?v=tVa6wcgZirA", sets: 3, reps: 10, kg: 25 },
+    { name: "Rozpiętki hantlami", part: "klatka piersiowa", video: "https://www.fabrykasily.pl/cwiczenia/na-klatke-piersiowa/rozpietki-z-hantlami-na-lawce-plaskiej", sets: 2, reps: 12, kg: 7 }
+  ],
+  "Trening B": [
+    { name: "Ściąganie chwytem neutralnym", part: "plecy", video: "https://www.fabrykasily.pl/atlas-cwiczen/plecy/sciaganie-chwytem-neutralnym-z-wyciagu-gornego", sets: 3, reps: 10, kg: 55 },
+    { name: "Wyciskanie sztangi łamanej", part: "triceps", video: "https://www.youtube.com/watch?v=xYbq3yoMJP8", sets: 2, reps: 10, kg: 17 }
+  ]
+};
+
 function goTo(section) {
   const content = document.getElementById('content');
-  if (section === 'calendar') {
-    content.innerHTML = '<h2>Kalendarz</h2>' +
-      '<p>Wybierz datę: <input type="date" id="datePicker" /></p>' +
-      '<p><select id="activity">' +
-      '<option value="trening">Trening</option>' +
-      '<option value="bieganie">Bieganie</option>' +
-      '<option value="rower">Rower</option>' +
-      '<option value="pilka">Pilka nozna</option>' +
-      '<option value="gory">Chod po gorach</option>' +
-      '</select></p>' +
-      '<button onclick="saveActivity()">Zapisz aktywnosc</button>';
-  } else if (section === 'training') {
-    content.innerHTML = '<h2>Trening</h2>' +
-      '<p><input type="text" id="exercise" placeholder="Nazwa ćwiczenia" /></p>' +
-      '<p><input type="number" id="sets" placeholder="Serie" /></p>' +
-      '<p><input type="number" id="reps" placeholder="Powtorzenia" /></p>' +
-      '<p><input type="number" id="weight" placeholder="Ciezar (kg)" /></p>' +
-      '<button onclick="saveTraining()">Zapisz trening</button>';
+  if (section === 'training') {
+    let html = '<h2>Wybierz szablon treningowy:</h2>';
+    html += '<select id="templateSelect"><option value="">-- wybierz --</option>';
+    for (let key in trainingTemplates) html += `<option value="${key}">${key}</option>`;
+    html += '</select><button onclick="loadTemplate()">Wczytaj</button><div id="templateOutput"></div>';
+    content.innerHTML = html;
+  } else if (section === 'calendar') {
+    content.innerHTML = '<h2>Kalendarz</h2><input type="date" id="datePicker"><select id="activity"><option>bieganie</option><option>gory</option><option>rower</option><option>pilka</option></select><button onclick="saveActivity()">Zapisz</button>';
   } else if (section === 'stats') {
     const log = JSON.parse(localStorage.getItem('gom_log') || '[]');
-    let stats = '<h2>Statystyki</h2>';
-    if (log.length === 0) {
-      stats += '<p>Brak danych.</p>';
-    } else {
-      log.forEach((entry, i) => {
-        stats += '<div><strong>' + entry.date + ':</strong> ' + entry.type + ' - ' +
-          (entry.exercise ? entry.exercise + ' | Serie: ' + entry.sets + ' Powt: ' + entry.reps + ' kg: ' + entry.weight : '') +
-          '</div>';
-      });
-    }
-    content.innerHTML = stats;
+    let html = '<h2>Statystyki</h2>';
+    log.forEach(entry => html += `<div><strong>${entry.date}</strong>: ${entry.type} ${entry.name || ''}</div>`);
+    content.innerHTML = html || '<p>Brak danych.</p>';
   }
 }
 
-function saveTraining() {
-  const log = JSON.parse(localStorage.getItem('gom_log') || '[]');
-  log.push({
-    date: new Date().toISOString().split('T')[0],
-    type: 'Trening',
-    exercise: document.getElementById('exercise').value,
-    sets: document.getElementById('sets').value,
-    reps: document.getElementById('reps').value,
-    weight: document.getElementById('weight').value
+function loadTemplate() {
+  const val = document.getElementById('templateSelect').value;
+  const container = document.getElementById('templateOutput');
+  if (!val) return container.innerHTML = '';
+  let html = '';
+  trainingTemplates[val].forEach((ex, i) => {
+    html += `<div class="exercise"><strong>${ex.name}</strong> (${ex.part})<br><a href="${ex.video}" target="_blank">🎥 Film</a><br>` +
+      `Serie: <input type="number" value="${ex.sets}" id="s${i}"> ` +
+      `Powt: <input type="number" value="${ex.reps}" id="r${i}"> ` +
+      `Kg: <input type="number" value="${ex.kg}" id="w${i}"></div>`;
   });
+  html += `<button onclick="saveTraining('${val}')">Zapisz trening</button>`;
+  container.innerHTML = html;
+}
+
+function saveTraining(template) {
+  const data = trainingTemplates[template].map((ex, i) => ({
+    name: ex.name,
+    part: ex.part,
+    sets: document.getElementById('s' + i).value,
+    reps: document.getElementById('r' + i).value,
+    weight: document.getElementById('w' + i).value
+  }));
+  const log = JSON.parse(localStorage.getItem('gom_log') || '[]');
+  log.push({ date: new Date().toISOString().split('T')[0], type: 'Trening', name: template, exercises: data });
   localStorage.setItem('gom_log', JSON.stringify(log));
   alert('Trening zapisany!');
 }
