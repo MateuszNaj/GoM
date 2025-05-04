@@ -1,0 +1,1 @@
+To jest finalna paczka aplikacji GoM! Wersja z szablonami i filmami.
