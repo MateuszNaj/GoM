@@ -1,1 +1,1 @@
-To jest finalna paczka aplikacji GoM! Wersja z szablonami i filmami.
+To jest finalna paczka aplikacji GoM! z pełną strukturą.

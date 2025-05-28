@@ -1,1 +1,1 @@
-// Główna logika JS
+console.log('Aplikacja GoM! działa');
